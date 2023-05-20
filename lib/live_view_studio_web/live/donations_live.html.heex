@@ -1,17 +1,35 @@
 <h1>Food Bank Donations</h1>
 <div id="donations">
+
+  <form phx-change = "select-per-page">
+    <select name="per-page" >
+      <%= Phoenix.HTML.Form.options_for_select(
+        [5, 10, 15, 20],
+        @options.per_page
+      ) %>
+    </select>
+    <label for="per-page">per page</label>
+  </form>
+
   <div class="wrapper">
     <table>
       <thead>
         <tr>
           <th class="item">
+          <.sort_link sort_by={:item} options={@options}>
             Item
+          </.sort_link>
+
           </th>
           <th>
+          <.sort_link sort_by={:quantity} options={@options}>
             Quantity
+          </.sort_link>
           </th>
           <th>
+           <.sort_link sort_by={:days_until_expires} options={@options}>
             Days Until Expires
+          </.sort_link>
           </th>
         </tr>
       </thead>
@@ -35,5 +53,21 @@
         </tr>
       </tbody>
     </table>
-  </div>
+    <div class="footer">
+      <div class="pagination">
+        <.page_link :if={@options.page > 1} page={(@options.page - 1) }  options={@options}>
+          Previous
+        </.page_link>
+        <.link  :for={{page_number, current_page?} <- pages(@options, @donation_count)}
+          class={if current_page?, do: "active"}
+          patch={~p"/donations?#{%{@options | page: page_number}}"}
+        >
+          <%= page_number %>
+        </.link>
+        <.page_link :if={more_pages?(@options, @donation_count)} page={(@options.page + 1) }  options={@options}>
+          Next
+        </.page_link>
+      </div>
+    </div>
+    </div>
 </div>
