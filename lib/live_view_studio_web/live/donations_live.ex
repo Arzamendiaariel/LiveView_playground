@@ -13,8 +13,8 @@ defmodule LiveViewStudioWeb.DonationsLive do
 
     sort_order = valid_sort_order(params)
 
-    page = (params["page"] || "1") |> String.to_integer()
-    per_page = (params["per_page"] || "5") |> String.to_integer()
+    page = param_to_integer(params["page"], 1)
+    per_page = param_to_integer(params["per_page"], 5)
 
 
     options = %{
@@ -113,6 +113,7 @@ defp valid_sort_order(_params), do: :asc
 defp more_pages?(options, donation_count) do
   options.page * options.per_page < donation_count
 end
+
 defp pages(options, donation_count) do
   page_count = ceil(donation_count / options.per_page)
 
@@ -122,6 +123,15 @@ defp pages(options, donation_count) do
       current_page? = page_number == options.page
       {page_number, current_page?}
     end
+  end
+end
+
+defp param_to_integer(nil, default), do: default
+
+defp param_to_integer(param, default) do
+  case Integer.parse(param) do
+    {int, ""} -> int
+    :error -> default
   end
 end
 
