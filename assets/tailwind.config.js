@@ -17,7 +17,8 @@ module.exports = {
         brand: "#FD4F00",
       },
       fontFamily: {
-        secret: ['TopSecret']
+        secret: ['TopSecret'],
+        montserrat: 'Montserrat',
       },
     },
   },
