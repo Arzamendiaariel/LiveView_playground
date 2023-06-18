@@ -6,6 +6,11 @@ defmodule LiveViewStudioWeb.ServersLive do
   alias LiveViewStudioWeb.ServerFromComponent
 
   def mount(_params, _session, socket) do
+
+    if connected?(socket) do
+      Servers.subscribe()
+    end
+
     servers = Servers.list_servers()
 
     socket =
@@ -114,7 +119,7 @@ defmodule LiveViewStudioWeb.ServersLive do
     """
   end
 
-  def handle_info({:server_created, server}, socket) do
+  def handle_info({:create_server, server}, socket) do
 
     socket =
       update(
@@ -123,26 +128,40 @@ defmodule LiveViewStudioWeb.ServersLive do
         fn servers -> [server | servers] end
       )
 
-    socket = push_patch(socket, to: ~p"/servers/#{server}")
+    {:noreply, socket}
+  end
+
+  def handle_info({:update_server, server}, socket) do
+
+    #maps sercers list, finds the one who's status has changed and changes it's status in sidebar
+    socket =
+      if server.id == socket.assigns.selected_server.id do
+        assign(socket, selected_server: server)
+      else
+        socket
+      end
+
+    socket =
+      update(socket, :servers, fn servers ->
+        for s <- servers do
+          if s.id == server.id, do: server, else: s
+        end
+      end)
 
     {:noreply, socket}
   end
 
-  def handle_event("toggle-status", %{"id"=> id}, socket) do
+  def handle_event("toggle-status", %{"id" => id}, socket) do
     server = Servers.get_server!(id)
-    #changes status in selected server
-    {:ok, _ } = Servers.toggle_status_server(server)
 
-    #maps sercers list, finds the one who's status has changed and changes it's status in sidebar
-    servers =
-      Enum.map(socket.assigns.servers, fn s ->
-        if s.id == server.id, do: server, else: s
-      end)
+    new_status = if server.status == "up", do: "down", else: "up"
 
-      socket=
-        socket
-        |> assign(:servers, servers)
-        |> assign(:selected_server, server)
+    {:ok, _server} =
+      Servers.update_server(
+        server,
+        %{status: new_status}
+      )
+
     {:noreply, socket}
   end
 
